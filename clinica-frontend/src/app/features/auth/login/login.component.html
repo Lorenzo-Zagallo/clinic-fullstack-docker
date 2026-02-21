@@ -1,0 +1,45 @@
+<div class="min-h-screen bg-slate-900 flex items-center justify-center p-4">
+
+    <div class="bg-white w-full max-w-md rounded-xl shadow-2xl overflow-hidden">
+
+        <div class="bg-blue-600 p-8 text-center">
+            <h2 class="text-3xl font-bold text-white">Clínica App</h2>
+            <p class="text-blue-100 mt-2">Entre para acessar o sistema</p>
+        </div>
+
+        <div class="p-8">
+            <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-6">
+
+                @if (erroLogin) {
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+                    <span class="block sm:inline">Usuário ou senha inválidos.</span>
+                </div>
+                }
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Usuário</label>
+                    <input type="text" formControlName="nomeUsuario"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                        placeholder="Digite seu usuário">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+                    <input type="password" formControlName="senha"
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                        placeholder="••••••••">
+                </div>
+
+                <button type="submit" [disabled]="loginForm.invalid"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                    Entrar
+                </button>
+
+            </form>
+        </div>
+
+        <div class="bg-gray-50 px-8 py-4 text-center text-sm text-gray-500">
+            Desenvolvido com Angular 18 & .NET 10
+        </div>
+    </div>
+</div>
