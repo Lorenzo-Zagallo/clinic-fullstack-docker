@@ -5,25 +5,37 @@ services:
         container_name: clinica-db
         environment:
             - ACCEPT_EULA=Y
-            - MSSQL_SA_PASSWORD=Kaxoxa_123! # Senha do Admin do Banco
+            - MSSQL_SA_PASSWORD=${DB_PASSWORD} # Senha do Admin do Banco
         ports:
             - "1434:1433" # Porta do SQL Server
         volumes:
             - sqlvolume_novo:/var/opt/mssql # Persistência de dados (para não perder ao reiniciar)
+        # Healthcheck real: tenta fazer um SELECT no banco
+        healthcheck:
+            test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P '${DB_PASSWORD}' -Q 'SELECT 1' -No || exit 1"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
+            start_period: 15s
 
     # Serviço 2: API Backend (.NET 10)
     backend:
         build:
             context: .
             dockerfile: Dockerfile
-        container_name: clinica-api
+        container_name: clinic-api
         depends_on:
-            - sqlserver # Só inicia depois que o banco subir
+           sqlserver:
+                condition: service_healthy # Só sobe se o healthcheck do sqlserver passar
         environment:
             # AQUI ESTÁ O TRUQUE:
             # Sobrescrevemos a ConnectionString para apontar para o container 'sqlserver'
-            # e usamos a senha definida acima.
-            - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=ClinicaDB;User Id=sa;Password=Kaxoxa_123!;TrustServerCertificate=True;
+            # e usamos a senha da .env.
+            - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=ClinicaDB;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=True;
+            - JwtOptions__Secret=${JWT_SECRET}
+            - JwtOptions__Issuer=ClinicaAPI
+            - JwtOptions__Audience=ClinicaFrontend
+            - JwtOptions__ExpirationHours=8
         ports:
             - "5137:8080" # Mapeia a porta interna 8080 para a sua 5137 (assim o front não se perde)
 
@@ -32,7 +44,7 @@ services:
         build:
             context: ../clinica-frontend
             dockerfile: Dockerfile
-        container_name: clinica-web
+        container_name: clinic-web
         depends_on:
             - backend # Só inicia depois da API
         ports:

@@ -1,13 +1,17 @@
+using Clinica.API.Configuration;
+using Clinica.Domain.Entities;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Clinica.Domain.Entities;
-using Microsoft.IdentityModel.Tokens;
 
 namespace Clinica.API.Services;
 
-public class TokenService
+public class TokenService(IOptions<JwtOptions> jwtOptions)
 {
+    private readonly JwtOptions _jwtOptions = jwtOptions.Value;
+
     public string GerarToken(Usuario usuario)
     {
         // 1. O Manipulador (A "Máquina de Crachás")
@@ -19,7 +23,7 @@ public class TokenService
         // Esta string longa é a senha da sua API. O token é assinado com ela.
         // Transformamos a string em um array de bytes porque o algoritmo de criptografia exige números (bytes), não texto.
         // IMPORTANTE: Se alguém descobrir essa frase, consegue criar tokens falsos e invadir seu sistema.
-        var key = Encoding.ASCII.GetBytes("MinhaChaveSuperSecretaDeDesenvolvimento123!");
+        var key = Encoding.ASCII.GetBytes(_jwtOptions.Secret);
 
         // 3. O Descritor (O "Formulário de Preenchimento")
         // Aqui nós definimos como o token será. É a configuração antes de "imprimir".
@@ -29,15 +33,21 @@ public class TokenService
             // Claims são as informações gravadas no token.
             // Aqui estamos dizendo: "Dentro deste token, grave que o Nome do usuário é o usuario.NomeUsuario".
             // Quando o front-end mandar esse token de volta, saberemos quem ele é só lendo isso.
-            Subject = new ClaimsIdentity(new[] {
-                    new Claim(ClaimTypes.Name, usuario.NomeUsuario)
-                }),
+            Subject = new ClaimsIdentity(
+            [
+                new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
+                new Claim(ClaimTypes.Name, usuario.NomeUsuario)
+            ]),
 
             // 5. Expires (A "Validade")
             // O token tem vida útil. Aqui definimos 8 horas.
             // Se o usuário tentar usar esse token daqui a 9 horas, a API rejeita automaticamente (erro 401).
             // Usamos UtcNow para evitar problemas de fuso horário (servidor no Brasil vs EUA).
-            Expires = DateTime.UtcNow.AddHours(8),
+            Expires = DateTime.UtcNow.AddHours(_jwtOptions.ExpirationHours),
+
+            Issuer = _jwtOptions.Issuer,
+
+            Audience = _jwtOptions.Audience,
 
             // 6. SigningCredentials (A "Assinatura Criptografada")
             // Aqui dizemos: "Assine este token usando minha chave (key) e o algoritmo HmacSha256".

@@ -2,7 +2,7 @@ using Clinica.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Clinica.Infrastructure.Configurations
+namespace Clinica.Infrastructure.Persistence.Configurations
 {
     public class ConsultaConfiguration : IEntityTypeConfiguration<Consulta>
     {
