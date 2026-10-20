@@ -25,4 +25,9 @@
 		<ProjectReference Include="..\Clinica.Infrastructure\Clinica.Infrastructure.csproj" />
 	</ItemGroup>
 
+	<!-- Oculta as pastas BuildHost geradas por pacotes NuGet -->
+	<ItemGroup>
+		<Content Remove="**\BuildHost-*/**" />
+	</ItemGroup>
+
 </Project>

@@ -106,15 +106,25 @@ namespace Clinica.Infrastructure.Migrations
 
                     b.Property<string>("NomeUsuario")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<string>("Senha")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Usuarios");
+                    b.ToTable("Usuarios", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            NomeUsuario = "admin",
+                            Senha = "$2a$11$d.W56ePArXBfKfYViJDjK.LCqFoxmyG7PFoVqQjTnMTIDttLapcVS"
+                        });
                 });
 
             modelBuilder.Entity("Clinica.Domain.Entities.Consulta", b =>

@@ -1,4 +1,4 @@
-namespace Clinica.API.Configuration
+namespace Clinica.Infrastructure.Configuration
 {
     public class JwtOptions
     {

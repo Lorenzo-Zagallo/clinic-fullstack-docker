@@ -1,42 +1,27 @@
 using System.Text;
-using Clinica.API.Configuration;
-using Clinica.API.Services;
-using Clinica.Application.Interfaces;
-using Clinica.Application.Services;
-using Clinica.Domain.Interfaces;
-using Clinica.Infrastructure.Context;
-using Clinica.Infrastructure.Repositories;
+using Clinica.Application;
+using Clinica.Infrastructure;
+using Clinica.Infrastructure.Configuration;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
 
-// 1. CONFIGURAÇÃO DE SEGREDOS E OPÇÕES (Options Pattern)
-builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
-var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>();
+// 1. INJEÇÃO DE DEPENDÊNCIA LIMPA (Clean Architecture)
+builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddApplication();
 
-// 2. INFRAESTRUTURA E BANCO DE DADOS
-builder.Services.AddDbContext<ClinicaDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-// 3. HEALTH CHECKS
 builder.Services.AddHealthChecks()
-    .AddDbContextCheck<ClinicaDbContext>(); // Verifica automaticamente se o EF Core consegue falar com o banco
-
-// 4. INJEÇÃO DE DEPENDÊNCIA (DI)
-builder.Services.AddScoped<IPacienteRepository, PacienteRepository>();
-builder.Services.AddScoped<IPacienteService, PacienteService>();
-builder.Services.AddScoped<IConsultaRepository, ConsultaRepository>();
-builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
-builder.Services.AddScoped<TokenService>();
+    .AddDbContextCheck<Clinica.Infrastructure.Context.ClinicaDbContext>();
 
 builder.Services.AddControllers();
 
-// 5. CONFIGURAÇAO DO JWT
+// 2. CONFIGURAÇÃO DO JWT
+var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>();
 var key = Encoding.ASCII.GetBytes(jwtOptions!.Secret);
 
 builder.Services.AddAuthentication(auth =>
@@ -59,7 +44,8 @@ builder.Services.AddAuthentication(auth =>
     };
 });
 
-// 6. CONFIGURAÇÃO DO SWAGGER
+// CONFIGURAÇÃO DO SWAGGER
+// Swagger e Cors mantidos como estavam no Sprint 1...
 builder.Services.AddSwaggerGen(swag =>
 {
     swag.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -90,21 +76,21 @@ builder.Services.AddSwaggerGen(swag =>
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("PermitirAngular",
-        policy =>
-        {
-            policy.WithOrigins("http://localhost:4200")
-                .AllowAnyHeader()
-                .AllowAnyMethod();
-        });
+    options.AddPolicy("PermitirAngular", policy =>
+    {
+        policy.WithOrigins("http://localhost:4200")
+        .AllowAnyHeader()
+        .AllowAnyMethod();
+    });
 });
 
 var app = builder.Build();
 
+// MIGRATION AUTOMÁTICA
 // Aplicação de Migrations Segura (O Docker já garantiu que o DB está online pelo HealthCheck)
 using (var scope = app.Services.CreateScope())
 {
-    var context = scope.ServiceProvider.GetRequiredService<ClinicaDbContext>();
+    var context = scope.ServiceProvider.GetRequiredService<Clinica.Infrastructure.Context.ClinicaDbContext>();
     try
     {
         context.Database.Migrate();
