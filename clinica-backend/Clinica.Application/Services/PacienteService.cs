@@ -3,88 +3,59 @@ using Clinica.Application.Interfaces;
 using Clinica.Domain.Entities;
 using Clinica.Domain.Interfaces;
 
-namespace Clinica.Application.Services;
-
-public class PacienteService : IPacienteService
+namespace Clinica.Application.Services
 {
-    private readonly IPacienteRepository _pacienteRepository;
-    private readonly IConsultaRepository _consultaRepository;
-
-    public PacienteService(IPacienteRepository pacienteRepository, IConsultaRepository consultaRepository)
+    public class PacienteService(
+        IPacienteRepository pacienteRepository,
+        IConsultaRepository consultaRepository) : IPacienteService
     {
-        _pacienteRepository = pacienteRepository;
-        _consultaRepository = consultaRepository;
-    }
-
-    public async Task<Paciente> CadastrarPacienteAsync(CreatePacienteDTO dto)
-    {
-        if (dto.ValorConsulta < 0)
+        public async Task<Paciente> CadastrarPacienteAsync(CreatePacienteDTO dto)
         {
-            throw new Exception("Valor da consulta não pode ser negativo");
+            // A construção da entidade agora garante a sua validade
+            var paciente = new Paciente(dto.Nome, dto.CPF, dto.ValorConsulta);
+            return await pacienteRepository.CriarAsync(paciente);
         }
-        
-        // Aqui transformamos o DTO (dados da tela) em Entidade (dados do banco)
-        var paciente = new Paciente
+
+        public async Task<List<Paciente>> ListarPacientesAsync()
         {
-            Nome = dto.Nome,
-            CPF = dto.CPF,
-            ValorConsulta = dto.ValorConsulta,
-            DataCadastro = DateTime.Now // Regra de negócio: data é automática
-        };
+            return await pacienteRepository.ObterTodosAsync();
+        }
 
-        // Chamamos o repositório para salvar no banco de dados usando a entidade criada acima
-        return await _pacienteRepository.CriarAsync(paciente);
-    }
-    
-    public async Task<List<Paciente>> ListarPacientesAsync()
-    {
-        // Chamamos o repositório para obter todos os pacientes do banco de dados
-        return await _pacienteRepository.ObterTodosAsync();
-    }
-
-    public async Task<bool> AtualizarPacienteAsync(int pacienteId, CreatePacienteDTO dto)
-    {
-        var pacienteExistente = await _pacienteRepository.ObterPorIdAsync(pacienteId);
-        
-        if (pacienteExistente == null) return false;
-
-        // Atualiza os dados
-        pacienteExistente.Nome = dto.Nome;
-        pacienteExistente.CPF = dto.CPF;
-        pacienteExistente.ValorConsulta = dto.ValorConsulta;
-
-        await _pacienteRepository.AtualizarAsync(pacienteExistente);
-        return true;
-    }
-
-    public async Task<bool> DeletarPacienteAsync(int pacienteId)
-    {
-        var pacienteExistente = await _pacienteRepository.ObterPorIdAsync(pacienteId);
-
-        if (pacienteExistente == null) return false;
-
-        await _pacienteRepository.DeletarAsync(pacienteExistente);
-        return true;
-    }
-
-    public async Task<DashboardDTO> ObterDadosDashboardAsync()
-    {
-        var total = await _pacienteRepository.ContarTotalAsync();
-        // var faturamento = await _pacienteRepository.SomarValorTotalAsync();
-
-        var faturamentoTotal = await _consultaRepository.FaturamentoTotal();
-        var totalConsultas = await _consultaRepository.TotalConsultas();
-
-        var ticketMedio = totalConsultas > 0 ? faturamentoTotal / totalConsultas : 0;
-
-        // Evitar divisão por zero
-        // var media = total > 0 ? faturamento / total : 0;
-
-        return new DashboardDTO
+        public async Task<bool> AtualizarPacienteAsync(int pacienteId, CreatePacienteDTO dto)
         {
-            TotalPacientes = total,
-            FaturamentoTotal = faturamentoTotal,
-            MediaValorConsulta = Math.Round(ticketMedio, 2)
-        };
+            var pacienteExistente = await pacienteRepository.ObterPorIdAsync(pacienteId);
+            if (pacienteExistente == null) return false;
+
+            // Utilizamos o método de comportamento da entidade
+            pacienteExistente.AtualizarDados(dto.Nome, dto.CPF, dto.ValorConsulta);
+
+            await pacienteRepository.AtualizarAsync(pacienteExistente);
+            return true;
+        }
+
+        public async Task<bool> DeletarPacienteAsync(int pacienteId)
+        {
+            var pacienteExistente = await pacienteRepository.ObterPorIdAsync(pacienteId);
+            if (pacienteExistente == null) return false;
+
+            await pacienteRepository.DeletarAsync(pacienteExistente);
+            return true;
+        }
+
+        public async Task<DashboardDTO> ObterDadosDashboardAsync()
+        {
+            var total = await pacienteRepository.ContarTotalAsync();
+            var faturamentoTotal = await consultaRepository.FaturamentoTotal();
+            var totalConsultas = await consultaRepository.TotalConsultas();
+
+            var ticketMedio = totalConsultas > 0 ? faturamentoTotal / totalConsultas : 0;
+
+            return new DashboardDTO
+            {
+                TotalPacientes = total,
+                FaturamentoTotal = faturamentoTotal,
+                MediaValorConsulta = Math.Round(ticketMedio, 2)
+            };
+        }
     }
 }

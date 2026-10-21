@@ -1,11 +1,13 @@
-using System.Text;
+using Clinica.API.Middlewares;
 using Clinica.Application;
+using Clinica.Application.DTOs;
 using Clinica.Infrastructure;
 using Clinica.Infrastructure.Configuration;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using Microsoft.EntityFrameworkCore;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -84,6 +86,15 @@ builder.Services.AddCors(options =>
     });
 });
 
+// --- (Antes do builder.Build()) ---
+
+// Registo do padrão Problem Details e Tratamento Global
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
+// Registo do Filtro de Validação
+builder.Services.AddScoped<ValidationFilter<CreatePacienteDTO>>();
+
 var app = builder.Build();
 
 // MIGRATION AUTOMÁTICA
@@ -107,6 +118,10 @@ app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 app.UseRouting();
+
+// --- (Depois de builder.Build() e UseRouting()) ---
+app.UseExceptionHandler(); // <-- Adicionar logo após o UseRouting
+
 app.UseCors("PermitirAngular");
 app.UseAuthentication();
 app.UseAuthorization();

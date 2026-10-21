@@ -1,5 +1,6 @@
 ﻿using Clinica.Application.Interfaces;
 using Clinica.Application.Services;
+using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Clinica.Application
@@ -10,6 +11,11 @@ namespace Clinica.Application
         {
             services.AddScoped<IPacienteService, PacienteService>();
             services.AddScoped<IAuthService, AuthService>();
+
+            // Regista todos os validadores que estão neste projeto
+            var assembly = typeof(DependencyInjection).Assembly;
+            services.AddValidatorsFromAssembly(assembly);
+
             return services;
         }
     }

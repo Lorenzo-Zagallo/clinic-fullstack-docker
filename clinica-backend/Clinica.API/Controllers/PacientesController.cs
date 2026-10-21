@@ -1,71 +1,67 @@
+using Clinica.API.Middlewares;
 using Clinica.Application.DTOs;
 using Clinica.Application.Interfaces;
 
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Clinica.API.Controllers;
-
-[Authorize]
-[ApiController]
-[Route("api/[controller]")]
-public class PacientesController : ControllerBase
+namespace Clinica.API.Controllers
 {
-    private readonly IPacienteService _pacienteService;
-
     // O controller pede o Service, que pede o Repository, que pede o Banco.
     // Tudo conectado automaticamente no Program.cs pelo .NET via Injeção de Dependência do ASP.NET Core DI Container
-    public PacientesController(IPacienteService pacienteService)
+    [Authorize]
+    [ApiController]
+    [Route("api/[controller]")]
+    public class PacientesController(IPacienteService pacienteService) : ControllerBase
     {
-        _pacienteService = pacienteService;
-    }
+        // POST: api/pacientes
+        [HttpPost]
+        [ServiceFilter(typeof(ValidationFilter<CreatePacienteDTO>))] // <-- Filtro de validação injetado
+        public async Task<IActionResult> CadastrarPaciente([FromBody] CreatePacienteDTO dto)
+        {
+            // Se o JSON vier vazio ou errado, o [ApiController] já valida automaticamente
+            var pacienteCriado = await pacienteService.CadastrarPacienteAsync(dto);
 
-    // POST: api/pacientes
-    [HttpPost]
-    public async Task<IActionResult> CadastrarPaciente([FromBody] CreatePacienteDTO dto)
-    {
-        // Se o JSON vier vazio ou errado, o [ApiController] já valida automaticamente
-        var pacienteCriado = await _pacienteService.CadastrarPacienteAsync(dto);
+            // Retorna status 201 (Created) com: o paciente criado no corpo da resposta e o local para acessar esse paciente via GET
+            return CreatedAtAction(nameof(CadastrarPaciente), new { id = pacienteCriado.Id }, pacienteCriado);
+        }
 
-        // Retorna status 201 (Created) com: o paciente criado no corpo da resposta e o local para acessar esse paciente via GET
-        return CreatedAtAction(nameof(CadastrarPaciente), new { id = pacienteCriado.Id }, pacienteCriado);
-    }
+        // GET: api/pacientes
+        [HttpGet]
+        public async Task<IActionResult> ListarPacientes()
+        {
+            var pacientes = await pacienteService.ListarPacientesAsync();
+            return Ok(pacientes);
+        }
 
-    // GET: api/pacientes
-    [HttpGet]
-    public async Task<IActionResult> ListarPacientes()
-    {
-        var pacientes = await _pacienteService.ListarPacientesAsync();
-        return Ok(pacientes);
-    }
+        // PUT: api/pacientes/{pacienteId}
+        [HttpPut("{pacienteId}")]
+        public async Task<IActionResult> AtualizarPaciente(int pacienteId, [FromBody] CreatePacienteDTO dto)
+        {
+            var sucesso = await pacienteService.AtualizarPacienteAsync(pacienteId, dto);
 
-    // PUT: api/pacientes/{pacienteId}
-    [HttpPut("{pacienteId}")]
-    public async Task<IActionResult> AtualizarPaciente(int pacienteId, [FromBody] CreatePacienteDTO dto)
-    {
-        var sucesso = await _pacienteService.AtualizarPacienteAsync(pacienteId, dto);
+            if (!sucesso) return NotFound(); // Retorna 404 se o paciente não existir
 
-        if (!sucesso) return NotFound(); // Retorna 404 se o paciente não existir
+            return NoContent(); // Retorna 204 se a atualização foi bem-sucedida
+        }
 
-        return NoContent(); // Retorna 204 se a atualização foi bem-sucedida
-    }
+        // DELETE: api/pacientes/{pacienteId}
+        [HttpDelete("{pacienteId}")]
+        public async Task<IActionResult> DeletarPaciente(int pacienteId)
+        {
+            var sucesso = await pacienteService.DeletarPacienteAsync(pacienteId);
 
-    // DELETE: api/pacientes/{pacienteId}
-    [HttpDelete("{pacienteId}")]
-    public async Task<IActionResult> DeletarPaciente(int pacienteId)
-    {
-        var sucesso = await _pacienteService.DeletarPacienteAsync(pacienteId);
+            if (!sucesso) return NotFound(); // Retorna 404 se o paciente não existir
 
-        if (!sucesso) return NotFound(); // Retorna 404 se o paciente não existir
+            return NoContent(); // Retorna 204 se a deleção foi bem-sucedida
+        }
 
-        return NoContent(); // Retorna 204 se a deleção foi bem-sucedida
-    }
-
-    // GET: api/pacientes/dashboard
-    [HttpGet("dashboard")]
-    public async Task<IActionResult> GetDashboard()
-    {
-        var dados = await _pacienteService.ObterDadosDashboardAsync();
-        return Ok(dados);
+        // GET: api/pacientes/dashboard
+        [HttpGet("dashboard")]
+        public async Task<IActionResult> GetDashboard()
+        {
+            var dados = await pacienteService.ObterDadosDashboardAsync();
+            return Ok(dados);
+        }
     }
 }
