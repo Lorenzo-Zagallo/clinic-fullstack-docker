@@ -74,8 +74,11 @@ namespace Clinica.Tests
             };
 
             // ACT && ASSERT
-            // Esperamos que o código lance uma Exception
-            await Assert.ThrowsAsync<Exception>(() => _pacienteService.CadastrarPacienteAsync(dto));
+            var excecao = await Assert.ThrowsAsync<ArgumentException>(
+                () => _pacienteService.CadastrarPacienteAsync(dto));
+
+            Assert.StartsWith("O valor da consulta não pode ser negativo.", excecao.Message);
+            Assert.Equal("valorConsulta", excecao.ParamName);
         }
     }
 }

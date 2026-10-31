@@ -19,7 +19,7 @@ namespace Clinica.Infrastructure.Persistence.Configurations
             {
                 Id = 1,
                 NomeUsuario = "admin",
-                Senha = BCrypt.Net.BCrypt.HashPassword("Kaxoxa_123!")
+                Senha = "$2a$11$ZJJmKBXhAjcvAXEBHXlIHunpQr0GEydDHj3PlN.s8Y/bTFRV6RinW"
             });
         }
     }

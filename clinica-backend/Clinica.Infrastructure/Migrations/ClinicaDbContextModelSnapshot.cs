@@ -123,7 +123,7 @@ namespace Clinica.Infrastructure.Migrations
                         {
                             Id = 1,
                             NomeUsuario = "admin",
-                            Senha = "$2a$11$d.W56ePArXBfKfYViJDjK.LCqFoxmyG7PFoVqQjTnMTIDttLapcVS"
+                            Senha = "$2a$11$ZJJmKBXhAjcvAXEBHXlIHunpQr0GEydDHj3PlN.s8Y/bTFRV6RinW"
                         });
                 });
 

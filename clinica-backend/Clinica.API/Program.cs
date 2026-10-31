@@ -131,3 +131,6 @@ app.MapHealthChecks("/health");
 app.MapControllers();
 
 app.Run();
+
+// necessário para os testes de integração do WebApplicationFactory
+public partial class Program { }
