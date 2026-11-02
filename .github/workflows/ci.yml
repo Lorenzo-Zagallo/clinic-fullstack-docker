@@ -1,0 +1,30 @@
+name: CI Pipeline - Backend
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout do código
+      uses: actions/checkout@v4
+
+    - name: Configurar .NET 10
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Restaurar dependências
+      run: dotnet restore ./clinica-backend/ClinicaModerno.sln
+
+    - name: Compilar projeto
+      run: dotnet build ./clinica-backend/ClinicaModerno.sln --no-restore --configuration Release
+
+    # Os testes de integração usarão o Docker nativo do GitHub Actions para levantar o SQL Server
+    - name: Rodar Testes (Unitários e Integração)
+      run: dotnet test ./clinica-backend/ClinicaModerno.sln --no-build --configuration Release --verbosity normal

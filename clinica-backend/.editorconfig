@@ -1,0 +1,32 @@
+root = true
+
+# Todas as extensões
+[*]
+charset = utf-8
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Arquivos C#
+[*.cs]
+# Organização de usings
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_directive_groups = true
+
+# Estilo de código de alto nível
+dotnet_style_qualification_for_field = false:suggestion
+dotnet_style_qualification_for_property = false:suggestion
+dotnet_style_qualification_for_method = false:suggestion
+dotnet_style_qualification_for_event = false:suggestion
+
+# Usar 'var' quando o tipo for aparente
+csharp_style_var_for_built_in_types = false:strict
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_elsewhere = false:strict
+
+# Chaves
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true

@@ -1,0 +1,19 @@
+version: 2
+updates:
+  # Analisa pacotes NuGet no backend
+  - package-ecosystem: "nuget"
+    directory: "/clinica-backend"
+    schedule:
+      interval: "weekly"
+    
+  # Analisa dependências NPM no frontend
+  - package-ecosystem: "npm"
+    directory: "/clinica-frontend"
+    schedule:
+      interval: "weekly"
+
+  # Analisa versões de imagens nos Dockerfiles
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
