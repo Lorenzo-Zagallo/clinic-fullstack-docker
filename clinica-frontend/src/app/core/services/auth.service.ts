@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { LoginRequest, LoginResponse } from '../models/login.model';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
     providedIn: 'root' // Singleton: Uma única instância para o app todo
@@ -11,7 +12,7 @@ export class AuthService {
     private http = inject(HttpClient);
 
     // URL da sua API .NET (ajuste a porta se necessário)
-    private apiUrl = 'http://localhost:5137/api/auth';
+    private apiUrl = `${environment.apiUrl}/auth`;
 
     // Método de Login
     login(dados: LoginRequest): Observable<LoginResponse> {
@@ -29,7 +30,7 @@ export class AuthService {
     }
 
     // Método de Logout
-    logout() {
+    logout(): void {
         localStorage.removeItem('access_token');
         // Aqui poderíamos redirecionar para /login
     }

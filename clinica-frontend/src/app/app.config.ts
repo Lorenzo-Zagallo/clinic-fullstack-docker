@@ -5,6 +5,7 @@ import { routes } from './app.routes';
 
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
+import { errorInterceptor } from './core/interceptors/error.interceptor';
 import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 
 export const appConfig: ApplicationConfig = {
@@ -15,7 +16,9 @@ export const appConfig: ApplicationConfig = {
         // Habilita o cliente HTTP (o novo jeito de importar HttpClientModule)
         provideHttpClient(
             withFetch(), // Usa Fetch API nativa (mais moderna)
-            withInterceptors([authInterceptor]) // Ativamos o nosso interceptor
+            
+            // A ordem importa: primeiro injeta o token, depois trata possíveis erros
+            withInterceptors([authInterceptor, errorInterceptor]) // Ativamos o nosso interceptor
         ),
 
         // Ativa os gráficos da dashboard

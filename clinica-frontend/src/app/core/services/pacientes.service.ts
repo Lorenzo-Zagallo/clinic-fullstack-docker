@@ -3,13 +3,14 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Paciente } from '../models/paciente.model';
 import { DashboardData } from '../models/dashboard.model';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
     providedIn: 'root',
 })
 export class PacientesService {
     private http = inject(HttpClient);
-    private apiUrl = 'http://localhost:5137/api/pacientes';
+    private apiUrl = `${environment.apiUrl}/pacientes`;
 
     // GET: Listar todos
     getPacientes(): Observable<Paciente[]> {
